@@ -138,11 +138,18 @@ def nDCG2(rel):
     maxdcg = np.sum((np.power(2,np.flipud(sortrel))-1)/logterm)
     return dcg/maxdcg
     
-def precK(r_true, r_pred, k):
-    # r_true: true ranking score (higher the value, higher the rank)
-    # t_pred: predicted ranking score
-    idx = np.argsort(-r_true) # index for sorting scores in descending order
-    r_true = r_true(idx) 
-    r_pred = r_pred(idx)
+def precK(s_true, s_pred, k):
+    # s_true: true ranking score (higher the value, higher the rank)
+    # s_pred: predicted ranking score
+    r_true = np.argsort(-s_true) # ground truth rank based on s_true
+    r_pred = np.argsort(-s_pred) # predicted rank based on s_pred
+
     prc_k = 0
+    for i in range(k):
+        for j in range(k):
+            if r_true[i] == r_pred[j]:
+                prc_k = prc_k+1
+                break
+
+    prc_k = prc_k/float(k)
     return prc_k

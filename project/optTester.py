@@ -71,11 +71,11 @@ scores = np.dot(Xtest,w_sol)
 truth = Ytest
 relevanceVector = truth[np.argsort(-scores)]
 
-prc_k = 3 # Precision @ k
+prc_k = 22 # k value for Precision @ k
 
 
-print "function cost " + str(functionCost)
-print "mapping error " + str(mappingCosDist) 
-print "nDCG " + str(nDCG(relevanceVector))
-print "nDCG2 " + str(nDCG(relevanceVector))
-print "precision@" + str(prc_k) + " " + str(precK(truth,scores,prc_k))
+print "function cost = " + str(functionCost)
+print "mapping error = " + str(mappingCosDist) 
+print "nDCG = " + str(nDCG(relevanceVector))
+print "nDCG2 = " + str(nDCG2(relevanceVector))
+print "Precision@" + str(prc_k) + " = " + str(precK(truth,scores,prc_k)) + " (total# = " + str(np.size(truth,axis=0)) + ")"
