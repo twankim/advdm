@@ -153,6 +153,3 @@ def precK(s_true, s_pred, k):
 
     prc_k = prc_k/float(k)
     return prc_k
-    
-def norm(vec):
-    return np.power( np.dot(vec,vec), .5)
