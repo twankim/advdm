@@ -8,14 +8,15 @@ Created on Sat Nov 21 16:06:12 2015
 import numpy as np
 import pandas as pd
 import sklearn.linear_model as lm
+import sklearn.metrics as met
 
-dataPath = "data/tuple_"
+#dataPath = "data/tuple_"
 
 def readTuple(tName): # tName: Name of tuple
     tData = pd.read_csv(dataPath+tName)
     return tData
     
-# Augment trendFeatures to Risk Scores
+# Augment trendFeatures to Risk Scores (For Predicting Septic Shock)
 # xScore: score column of a patient
 def trendFeature(xScore):
     tLength = np.size(xScore)
@@ -71,4 +72,14 @@ def trendFeature(xScore):
     
     return tFeature
     
-def 
+def septicAUC(Xtrain,Ytrain,Xtest,Ytest):
+    lmlogit = lm.LogisticRegression('l2', C=1)
+    lmlogit.fit(Xtrain,Ytrain)
+    thres = np.arange(0,1.05,0.05)
+    scorePredict = np.zeros(np.size(Ytest))
+    for i in range(len(thres)):
+        thre = thres[i]
+        scorePredict[i] = int(lmlogit.predict_proba(Xtest)[:,1] >= thre)
+        
+    aucVal = met.roc_auc_score(Ytest,scorePredict)
+    return aucVal
