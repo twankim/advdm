@@ -11,19 +11,19 @@ from optTesters import *
 import pandas as pd
 import os
 import time
+import sklearn.cross_validation as splitter
 
 # parameters
 c = np.exp(-5) # regularization strength
 nft = 20
-ntrain = 2000
-ntest = 200
+ntrain = 12000
 bins = 10.
-method = 2
+method = 1
 
 ## gather data
 readFolder = os.path.realpath('./interpolatedv1.1')
 filelist = os.listdir(readFolder)
-npatients = 100#len(filelist)
+npatients = len(filelist)
 
 first = True
 for fileName in filelist[:npatients]:
@@ -39,11 +39,18 @@ for fileName in filelist[:npatients]:
         fullData = fullData.append(patient)
 
 nobs , nft = fullData.shape
-ntrain = min(ntrain, nobs)
-Xtrain = np.array( fullData.drop(['score','treatment'],axis=1).iloc[:ntrain] )
-Ytrain = np.array( fullData['score'].iloc[:ntrain] )
-Xtest = np.array( fullData.drop(['score','treatment'],axis=1).iloc[ntrain:] )
-Ytest = np.array( fullData['score'].iloc[ntrain:] )
+ntrain = min(ntrain,nobs)
+trainsplit = splitter.StratifiedShuffleSplit(fullData['score'], 
+                                            n_iter = 1, train_size = ntrain)
+escape = 0
+for trainInds, testInds in trainsplit:
+    escape += 1
+    if escape > 1:
+        break
+    Xtrain = np.array(fullData.drop(['score','treatment'],axis=1))[trainInds,:]
+    Ytrain = np.array(fullData['score'])[trainInds]
+    Xtest = np.array(fullData.drop(['score','treatment'],axis=1))[testInds,:]
+    Ytest = np.array(fullData['score'])[testInds]
 
 # Learn scores
 startTime = time.time()
