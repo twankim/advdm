@@ -50,24 +50,25 @@ def optScore(Xtrain, Ytrain, Xtest, Ytest, method, c):
         magnitude = np.dot(w_sol, w_sol)
         functionCost = trainError + c*magnitude
         
-    ## MR with auxiliary margin and soft cost - not complete yet
+    ## MR with auxiliary margin and soft cost
     if method == 2:
-    
+        c2 = np.exp(-3) # margin strength, idk what this should be set to
         # QP : min .5*z'Pz + qz s.t. Gz <= h
         # for this case, z = [w (weights), r (ranks), u (auxiliary ranks)]
         # P = 2(A'A + cI_w), where A is [-X I 0]
         # G is difference matrix, h is the required margin (currently set to 1) 
         rlen = Xtrain.shape[0]
         wlen = Xtrain.shape[1]
-        [adjDiff, ulen] = diffMatrix(margins(Ytrain)) 
+        [adjDiff, ulen] = diffMatrix(margins(Ytrain))
+        difflen = adjDiff.shape[0]
         
         A = np.concatenate((-Xtrain, np.eye(rlen), np.zeros((rlen,ulen))),
                            axis = 1)
         Iw = np.eye(wlen,wlen+rlen+ulen)
         P = 2*np.dot(A.transpose(),A) + 2*c*np.dot(Iw.transpose(),Iw)
-        q = np.array([0.]*(wlen+rlen+ulen))
-        G = -np.append(np.zeros((adjDiff.shape[0], wlen)), adjDiff , axis=1)
-        h = np.array([-1.]*(G.shape[0]))
+        q = np.append(np.array([0.]*wlen) , -c2*np.sum(adjDiff,axis=0))
+        G = np.append(np.zeros((difflen, wlen)), -adjDiff , axis=1)
+        h = np.array([0.]*(difflen))
         
         P = matrix(P)
         q = matrix(q)
