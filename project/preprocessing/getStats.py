@@ -10,20 +10,20 @@ import numpy as np
 import os
 
 
-readFolder = os.path.realpath('./mimic_unscoredv1.1')
+readFolder = os.path.realpath('./mimic_scoredv1.1')
 writeFolder = os.path.realpath('.')
 filelist = os.listdir(readFolder)
 npatients = len(filelist)
 
 #numericFeatures = [11,15,5,17] # the missing ones in v2, for v1
-numericFeatures = range(26)+[27,28,32,33] # v2 and v3
+numericFeatures = range(25)+[26,27,31,32] # v1.1
 
 counter = 0
 for fileName in filelist[:npatients]:
     #fileName ='tuple_1141_1411.csv'
     
     patient = pd.read_csv(readFolder +'/'+ fileName, sep=',', 
-                          header=0, index_col=0)
+                          header=0, index_col=None)
     for numft in patient.columns.values[numericFeatures]:
         patient[numft][patient[numft]<=0] = np.nan
 
