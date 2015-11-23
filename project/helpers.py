@@ -47,6 +47,21 @@ def margins(Y): # takes a sorted (descending) list and folds same elements
             prev = y
     return foldedY
     
+def diffCost(Y): # takes a sorted (descending) list and makes <D,1>, where
+    # D is the difference matrix
+    Y = margins(Y)
+    partialBins = list((len(y) for y in Y)) # size of each partially-ordered group
+    costVector = []
+    for k in len(partialBins):
+        if k == 0:
+            value = partialBins[k+1]
+        elif k == len(partialBins)-1:
+            value = -partialBins[k-1]
+        else:
+            value = partialBins[k+1] - partialBins[k-1]
+        costVector += [value]*partialBins[k]
+    return costVector
+    
 def diffMatrix(Y): # takes a folded sorted list and makes a difference matrix
     # w/ auxiliary variables if needed
 #==============================================================================

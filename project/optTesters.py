@@ -11,6 +11,7 @@ Created on Sat Nov 21 23:50:06 2015
 from cvxopt import matrix, solvers
 import numpy as np
 from helpers import *
+import sklearn.isotonic
 
 def optScore(Xtrain, Ytrain, Xtest, Ytest, method, c):
     # sort
@@ -53,10 +54,7 @@ def optScore(Xtrain, Ytrain, Xtest, Ytest, method, c):
     ## MR with auxiliary margin and soft cost
     if method == 2:
         c2 = np.exp(-3) # margin strength, idk what this should be set to
-        # QP : min .5*z'Pz + qz s.t. Gz <= h
-        # for this case, z = [w (weights), r (ranks), u (auxiliary ranks)]
-        # P = 2(A'A + cI_w), where A is [-X I 0]
-        # G is difference matrix, h is the required margin (currently set to 1) 
+        # min D(r||Xw) + c_1||w|| - c_2 1'Dr s.t. Dr > 0
         rlen = Xtrain.shape[0]
         wlen = Xtrain.shape[1]
         [adjDiff, ulen] = diffMatrix(margins(Ytrain))
@@ -112,7 +110,7 @@ def optScore(Xtrain, Ytrain, Xtest, Ytest, method, c):
         
         functionCost = np.dot(w_sol, w_sol)
         
-    ## MINLIP with sort cost - min ||w|| - c1'DXw s.t. DXw > 0
+    ## MINLIP with soft cost - min ||w|| - c1'DXw s.t. DXw > 0
     if method == 4:    
     
         # QP : min .5*z'Pz + qz s.t. Gz <= h
@@ -176,6 +174,51 @@ def optScore(Xtrain, Ytrain, Xtest, Ytest, method, c):
                     sortedInds = np.argsort(-np.dot(Xtrain[pocket],w))
                     adjDiff[:,pocket] = adjDiff[:,pocket[sortedInds]]
                 counter += len(pockety)
+                
+            # solve quadratic program for r        
+            P = 2*matrix(np.eye(nobs))
+            q = matrix(np.array([0.]*nobs))
+            G = matrix(-adjDiff)
+            h = matrix(np.array([-1.]*(nobs-1)))
+            
+            result = solvers.qp(P,q,G,h) 
+            r = np.array(result['x']).flatten()
+            
+        w_sol = w
+        functionCost = 0
+    
+    ## linear MR with PAV and closed form for w
+    if method == 6:
+    
+        nobs = Xtrain.shape[0]
+        nft = Xtrain.shape[1]
+        adjDiff = np.eye(nobs-1,nobs) - np.eye(nobs-1,nobs,1)
+        
+        covmatrix = np.dot(np.transpose(Xtrain),Xtrain)
+        covmatrix = covmatrix + c*np.eye(nft) # add l2 cost
+        solvematrix = np.dot( np.linalg.inv(covmatrix) , np.transpose(Xtrain))
+        
+        def dpsi(x):
+            return x
+        
+        # set up PAV
+        yMargins = margins(Ytrain)
+        order = range(nobs) # increasing order, unlike other formulations!        
+        
+        r = Ytrain # easy initialization
+        for wholerun in range(5):
+            # gradient descent with w
+            w = np.dot(solvematrix, r)
+            
+            # sort partial order
+            counter = 0
+            for pocketList in yMargins:
+                pocketlen = len(pocketList)
+                if pocketlen > 1:
+                    pocket = np.arange(counter,counter+pocketlen)
+                    sortedInds = np.argsort(np.dot(Xtrain[pocket],w))
+                    order[pocket] = pocket[sortedInds]
+                counter += pocketlen
                 
             # solve quadratic program for r        
             P = 2*matrix(np.eye(nobs))
