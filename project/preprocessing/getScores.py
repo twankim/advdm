@@ -11,7 +11,7 @@ returns NaN if conditions not met
 treatment = 1 if treatment started here, 0 otherwise (no NaNs)
 hourly data assumed
 
-last update: 11/22 morning
+last update: 11/22 6:00
 '''
 
 def getLatestMeasurement(data, feature, currentTime, limit):
@@ -28,7 +28,7 @@ def hasSIRS(heart_rate,temp,resp_rate,PaCO2,WBC):
         counter += 1
     if not np.isnan(temp) and (temp > 38 or temp < 36):
         counter += 1
-    if not np.isnan(temp) and resp_rate > 2:
+    if not np.isnan(resp_rate) and resp_rate > 2:
         counter += 1
     elif not np.isnan(PaCO2) and PaCO2 < 32:
         counter += 1
@@ -135,15 +135,14 @@ def getTreatment(pdata, sumA, sumB):
     return (treatment, sumA ,sumB)
         
         
-    
+
 # apply to data
-readFolder = os.path.realpath('./mimic_unscoredv1.1')
-writeFolder = os.path.realpath('./mimic_scoredv1.1')
+readFolder = os.path.realpath('./mimic_unscoredv1.2')
+writeFolder = os.path.realpath('./mimic_scoredv1.2')
 filelist = os.listdir(readFolder)
 npatients = len(filelist)
 
-numericFeatures = range(26)+[27,28,32,33] # for v0.2
-
+numericFeatures = range(25)+[26,27,31,32] # v1.2
 patientsWithScore = 0.
 patientsWithSepsis = 0.
 timesWithScore = 0.
@@ -159,8 +158,8 @@ for fileName in filelist[:npatients]:
                           header=0, index_col=0)
     
     # transform all 0 values in numeric features to nans                       
-    for numft in patient.columns.values[numericFeatures]:
-        patient[numft][patient[numft]<=0] = np.nan
+    #for numft in patient.columns.values[numericFeatures]:
+    #    patient[numft][patient[numft]<=0] = np.nan
         
     score = getScores(patient)
     
@@ -180,7 +179,7 @@ for fileName in filelist[:npatients]:
     numTreatments += sum(treatment)
     patient = patient.drop('fluidbolus',1)
     
-    #patient.to_csv(writeFolder + "/" + fileName, index=False, na_rep='NaN')
+    patient.to_csv(writeFolder + "/" + fileName, index=False, na_rep='NaN')
 
 print ('percent patients with score: ' +
             str(patientsWithScore/npatients) + '\n' +

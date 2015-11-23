@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 19 15:19:06 2015
-
-@author: motro
+save csv of min,mean,max stats for each feature
+also check if features are entirely missing
+last change 11/22 at 6:00
 """
 
 import pandas as pd
@@ -10,13 +10,12 @@ import numpy as np
 import os
 
 
-readFolder = os.path.realpath('./mimic_scoredv1.1')
+readFolder = os.path.realpath('./mimic_scoredv1.2')
 writeFolder = os.path.realpath('.')
 filelist = os.listdir(readFolder)
 npatients = len(filelist)
 
-#numericFeatures = [11,15,5,17] # the missing ones in v2, for v1
-numericFeatures = range(25)+[26,27,31,32] # v1.1
+numericFeatures = range(24)+[25,26,30,31] # v1.2 scored
 
 counter = 0
 for fileName in filelist[:npatients]:
@@ -24,8 +23,8 @@ for fileName in filelist[:npatients]:
     
     patient = pd.read_csv(readFolder +'/'+ fileName, sep=',', 
                           header=0, index_col=None)
-    for numft in patient.columns.values[numericFeatures]:
-        patient[numft][patient[numft]<=0] = np.nan
+    #for numft in patient.columns.values[numericFeatures]:
+    #    patient[numft][patient[numft]<=0] = np.nan
 
     if counter == 0:
         maxvals = np.nanmax(patient,axis=0)
