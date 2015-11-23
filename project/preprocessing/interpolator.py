@@ -14,7 +14,9 @@ import os
 
 def interpolator1d (data,stat):
 
-    for i in range (data.shape[1]-2):
+    numericFeatures = range(24)+[25,26,30,31] # v1.2 scored
+
+    for i in numericFeatures:#range (data.shape[1]-2):
         a = data.iloc[:,i]
         b = a.count()
         mx = stat.iloc[0,i+1]
@@ -28,7 +30,8 @@ def interpolator1d (data,stat):
             y = a[a.notnull()]
             y=np.array(y)
             # linear interpolation
-            f = interpolate.interp1d(x, y, kind='linear', axis=-1, copy=True, bounds_error=False, fill_value=np.nan, assume_sorted=False)
+            f = interpolate.interp1d(x, y, kind='linear', axis=-1, copy=True,
+                                     bounds_error=False, fill_value=np.nan)
             x_new = a.index.values
             y_new = f(x_new)
             if x[0]>0:       
@@ -44,17 +47,18 @@ def interpolator1d (data,stat):
                 y_high[y_high>mx]=mx
                 y_new[x[-1]+1:]=y_high
         elif b==1:
-            y_new [0:a.shape[0]] = a[a.notnull()]
+            y_new = a.copy()
+            y_new[:] = a[a.notnull()].iloc[0]
         else:
             y_new = np.zeros(a.shape[0])
-            y_new [0:a.shape[0]] = av     
+            y_new[0:a.shape[0]] = av     
         data.iloc[:,i]=y_new
           
     return data       
 
 
-readFolder = os.path.realpath('./mimic_scoredv1.2')
-writeFolder = os.path.realpath('./mimic_finalv1.2')
+readFolder = os.path.realpath('../mimic_scoredv1.2')
+writeFolder = os.path.realpath('../mimic_finalv1.2')
 stat = pandas.read_csv(os.path.realpath('./stats.csv'),header=0,index_col=0)
 filelist = os.listdir(readFolder)
 npatients = len(filelist)
@@ -64,4 +68,6 @@ for fileName in filelist[:npatients]:
                               index_col=False)
     patient = interpolator1d(patient,stat)
     
-    patient.to_csv(writeFolder + "/" + fileName, index=False,na.rep='NaN') 
+    patient.drop('pco2', axis=1, inplace = True) # currently completely missing
+    
+    patient.to_csv(writeFolder + "/" + fileName, index=False,na_rep='NaN') 
