@@ -9,18 +9,21 @@ from evalData_jhu import *
 #from sklearn.metrics import roc_auc_score
 from sklearn.metrics import auc
 import numpy as np
+import matplotlib.pyplot as plt
+
+saveFlag = True
 
 fileName = 'predictData.csv'
 w_sol = np.load('w_sol.npy')
 print "----- Making Pos/Neg sample data..."
-if 1:
+if saveFlag:
     dataPos, dataNeg, pidPos, pidNeg = makePosNegShock(fileName)
     np.save('shockPosNeg',[dataPos,dataNeg,pidPos,pidNeg])
 else:
     dataPos, dataNeg, pidPos, pidNeg = np.load('shockPosNeg.npy')
 
 print "----- Predicting septic shock..."
-maxIter = 5
+maxIter = 10
 aucSepticMR = np.zeros(maxIter)
 aucSepticFeat = np.zeros(maxIter)
 
@@ -35,3 +38,10 @@ for i in range(maxIter):
     
 print "AUC (MRscore+Derived) = " + str(np.mean(aucSepticMR))
 print "AUC (Features only) = " + str(np.mean(aucSepticFeat))
+
+plt.figure()
+plt.plot(fprMR,tprMR,'b-',fprFeat,tprFeat,'r-')
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.legend(['MR+derived','Feature'])
+plt.title('ROC')
