@@ -14,7 +14,7 @@ from os import listdir
 import random
 
 dataPath = "/Users/twankim/tdub/gitwan/advdm/project/interpolatedv1.1"
-headerFile = "feature_header.csv"
+headerFile = "feature_header.csv" # File for feature header
 
 def readTuple(tName,mode): # tName: Name of tuple file
     if mode == 1: # csv doesn't include feature header
@@ -32,12 +32,16 @@ def trendFeature(xScore):
     tLength = np.size(xScore)
     ts = xScore.index.values.tolist() # time steps
     ts = [x+1 for x in ts] # to avoid 0 value
-    ts2 = np.power(ts,2)
+    ts2 = np.power(ts,2) # t^2
+
+    # time difference
     tsDiff = np.diff(ts)
     if len(tsDiff) == 0:
         tsDiff = ts
     else:
         tsDiff = np.insert(tsDiff, 0, tsDiff[0])
+
+    # score difference
     scoreDiff = np.diff(xScore[0])
     if len(scoreDiff) == 0:
         scoreDiff = xScore[0]

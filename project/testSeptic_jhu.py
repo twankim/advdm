@@ -5,14 +5,33 @@ Created on Mon Nov 23 20:22:36 2015
 @author: twankim
 """
 
-import pickle
-from evalData import *
-from sklearn.metrics import roc_auc_score
+from evalData_jhu import *
+#from sklearn.metrics import roc_auc_score
+from sklearn.metrics import auc
+import numpy as np
 
-f = open('w_sol.pckl')
-w_sol = pickle.load(f)
-f.close()
-[Xtrain, Ytrain, pidTrain, Xtest, Ytest, pidTest] = makeDataShock(w_sol)
+fileName = 'predictData.csv'
+w_sol = np.load('w_sol.npy')
+print "----- Making Pos/Neg sample data..."
+if 1:
+    dataPos, dataNeg, pidPos, pidNeg = makePosNegShock(fileName)
+    np.save('shockPosNeg',[dataPos,dataNeg,pidPos,pidNeg])
+else:
+    dataPos, dataNeg, pidPos, pidNeg = np.load('shockPosNeg.npy')
 
-scorePredict = septicPredict(Xtrain, Ytrain, pidTrain, Xtest, Ytest, pidTest)
-print "AUC = " + str(roc_auc_score(Ytest,scorePredict))
+print "----- Predicting septic shock..."
+maxIter = 5
+aucSepticMR = np.zeros(maxIter)
+aucSepticFeat = np.zeros(maxIter)
+
+for i in range(maxIter):
+    print "- iter#: " + str(i)
+    print "  Making Train/Test data..."
+    Xtrain, Ytrain, pidTrain, Xtest, Ytest, pidTest, Xtrain2, Xtest2 = makeDataShock(dataPos,dataNeg,pidPos,pidNeg,w_sol)
+    print "  Predicting and calculating TPR/FPR..."
+    tprMR, fprMR, tprFeat, fprFeat = septicPredict(Xtrain, Ytrain, pidTrain, Xtest, Ytest, pidTest, Xtrain2, Xtest2)
+    aucSepticMR[i] = auc(fprMR, tprMR)
+    aucSepticFeat[i] = auc(fprFeat, tprFeat)
+    
+print "AUC (MRscore+Derived) = " + str(np.mean(aucSepticMR))
+print "AUC (Features only) = " + str(np.mean(aucSepticFeat))
