@@ -6,42 +6,53 @@ Created on Mon Nov 23 20:22:36 2015
 """
 
 from evalData_jhu import *
-#from sklearn.metrics import roc_auc_score
-from sklearn.metrics import auc
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve
 
-saveFlag = True
+saveFlag = False
 
-fileName = 'predictData.csv'
+fileTrain = 'predictDataTrain.csv'
+fileTest = 'predictDataTest.csv'
 w_sol = np.load('w_sol.npy')
-print "----- Making Pos/Neg sample data..."
+
+mode = 0 # Selecting score function
+
 if saveFlag:
-    dataPos, dataNeg, pidPos, pidNeg = makePosNegShock(fileName)
-    np.save('shockPosNeg',[dataPos,dataNeg,pidPos,pidNeg])
+    print "----- Making Training sample data..."
+    # Make data from Training set
+    XscoreTrain, XderivedTrain, XfeatureTrain = makeDataShock(fileTrain,w_sol,mode)
+    print "----- Making Test sample data..."
+    # Make data from Test set
+    XscoreTest, XderivedTest, XfeatureTest = makeDataShock(fileTest,w_sol,mode)
+    
+    np.save('trainTdub',[XscoreTrain, XderivedTrain, XfeatureTrain])
+    np.save('testTdub',[XscoreTest, XderivedTest, XfeatureTest])
 else:
-    dataPos, dataNeg, pidPos, pidNeg = np.load('shockPosNeg.npy')
+    print "----- Loading Training sample data..."
+    XscoreTrain, XderivedTrain, XfeatureTrain = np.load('trainTdub.npy')
+    print "----- Loading Test sample data..."
+    # Make data from Test set
+    XscoreTest, XderivedTest, XfeatureTest = np.load('testTdub.npy')
+    
 
 print "----- Predicting septic shock..."
-maxIter = 10
-aucSepticMR = np.zeros(maxIter)
-aucSepticFeat = np.zeros(maxIter)
+YtrueMR, YscoreMR = septicPredict(XscoreTrain,XscoreTest)
+YtrueMRderived, YscoreMRderived = septicPredict(XderivedTrain,XderivedTest)
+YtrueFeat, YscoreFeat = septicPredict(XfeatureTrain,XfeatureTest)
 
-for i in range(maxIter):
-    print "- iter#: " + str(i)
-    print "  Making Train/Test data..."
-    Xtrain, Ytrain, pidTrain, Xtest, Ytest, pidTest, Xtrain2, Xtest2 = makeDataShock(dataPos,dataNeg,pidPos,pidNeg,w_sol)
-    print "  Predicting and calculating TPR/FPR..."
-    tprMR, fprMR, tprFeat, fprFeat = septicPredict(Xtrain, Ytrain, pidTrain, Xtest, Ytest, pidTest, Xtrain2, Xtest2)
-    aucSepticMR[i] = auc(fprMR, tprMR)
-    aucSepticFeat[i] = auc(fprFeat, tprFeat)
-    
-print "AUC (MRscore+Derived) = " + str(np.mean(aucSepticMR))
-print "AUC (Features only) = " + str(np.mean(aucSepticFeat))
+print "AUC (MRscore) = " + str(roc_auc_score(YtrueMR,YscoreMR))    
+print "AUC (MRscore+Derived) = " + str(roc_auc_score(YtrueMRderived,YscoreMRderived))
+print "AUC (Features only) = " + str(roc_auc_score(YtrueFeat,YscoreFeat))
+
+fprMR, tprMR,_ = roc_curve(YtrueMR,YscoreMR,pos_label=1)
+fprMRderived, tprMRderived,_ = roc_curve(YtrueMRderived,YscoreMRderived)
+fprFeat, tprFeat,_ = roc_curve(YtrueFeat,YscoreFeat)
 
 plt.figure()
-plt.plot(fprMR,tprMR,'b-',fprFeat,tprFeat,'r-')
+plt.plot(fprMR,tprMR,'b-',fprMRderived,tprMRderived,'r-', fprFeat, tprFeat,'k-')
 plt.xlabel('FPR')
 plt.ylabel('TPR')
-plt.legend(['MR+derived','Feature'])
+plt.legend(['MR','MR+derived','Feature'])
 plt.title('ROC')
