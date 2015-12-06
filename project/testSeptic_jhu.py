@@ -16,7 +16,7 @@ saveFlag = True
 
 fileTrain = '/Users/twankim/tdub/gitwan/advdm/project/jhu_data/predictDataTrain.csv'
 fileTest = '/Users/twankim/tdub/gitwan/advdm/project/jhu_data/predictDataTest.csv'
-#w_sol = np.load('w_sol.npy')
+
 #w_sol = np.load('sol_1.npy') # Linear Regression
 #w_sol = np.load('sol_4.npy') # MR_Squared Equlidian
 w_sol = np.load('sol_6.npy') # MR I-divergence
