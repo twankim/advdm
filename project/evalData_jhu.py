@@ -91,11 +91,20 @@ def scoreCalc(wData, w_sol, mode):
         
     return scoreData
         
+# Xfeature: Original features only
+def makeDataShockFeat(fileName):
+    # Read csv file and find patient ID lists
+    wholeData = pd.read_csv(fileName)
+
+    # Original features only
+    Xfeature = wholeData.drop(['time'],axis=1)
+    
+    return Xfeature
+
 # Read csv file and make 3 different data
 # Xscore: score only
 # Xderived: score + derived 7 derived features
-# Xfeature: Original features only
-# Each data will include 'ID', 'truth' additionally
+# Each data will include 'ID', 'truth' additionally            
 def makeDataShock(fileName,w_sol,mode):
     # Read csv file and find patient ID lists
     wholeData = pd.read_csv(fileName)
@@ -110,7 +119,6 @@ def makeDataShock(fileName,w_sol,mode):
     # Data type 1: score only
     Xscore = wholeData[['score','ID','truth']]
     # Data type 3: Original features only
-    Xfeature = wholeData.drop(['time','score'],axis=1)
     
     # Data type 2: score + derived 7 derived features
     # Add 7 features to Xderived
@@ -127,7 +135,7 @@ def makeDataShock(fileName,w_sol,mode):
     Xderived['ID'] = wholeData['ID']
     Xderived['truth'] = wholeData['truth']
             
-    return Xscore, Xderived, Xfeature
+    return Xscore, Xderived
     
 # Calculate prediction scoure (AUC) from Train/Test data
 def septicPredict(dataTrain,dataTest):
