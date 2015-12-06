@@ -14,8 +14,12 @@ from sklearn.metrics import roc_curve
 fileTrain = '/Users/twankim/tdub/gitwan/advdm/project/jhu_data/predictDataTrain.csv'
 fileTest = '/Users/twankim/tdub/gitwan/advdm/project/jhu_data/predictDataTest.csv'
 
-saveFlagFeat = True
-#saveFlagFeat = False
+saveFlagMain = False
+
+if saveFlagMain:
+    saveFlagFeat = True
+else:
+    saveFlagFeat = False
 
 w_sol1 = np.load('sol_1.npy') # Linear Regression
 w_sol4 = np.load('sol_4.npy') # MR_Squared Equlidian
@@ -28,8 +32,10 @@ mode6 = 1
 w_sols = [w_sol1, w_sol4, w_sol6]
 modes = [mode1,mode4,mode6]
 nameNs = [1,4,6]
-saveFlags = [True,True,True]
-#saveFlags = [False,False,False]
+if saveFlagMain:
+    saveFlags = [True,True,True]
+else:
+    saveFlags = [False,True,False]
 
 print "<Feature Only>"
 if saveFlagFeat:
@@ -37,13 +43,13 @@ if saveFlagFeat:
     XfeatureTrain = makeDataShockFeat(fileTrain)
     print "----- Making Test sample data..."
     XfeatureTest = makeDataShockFeat(fileTest)
-    np.save('trainFeat',XfeatureTrain)
-    np.save('testFeat',XfeatureTest)
+    np.save('trainFeat',[XfeatureTrain,XfeatureTrain['truth']])
+    np.save('testFeat',[XfeatureTest,XfeatureTrain['truth']])
 else:
     print "----- Loading Training sample data..."
-    XfeatureTrain = np.load('trainFeat.npy')
+    XfeatureTrain,_ = np.load('trainFeat.npy')
     print "----- Loading Test sample data..."
-    XfeatureTest = np.load('testFeat.npy')
+    XfeatureTest,_ = np.load('testFeat.npy')
 
 print "----- Predicting septic shock..."
 YtrueFeat, YscoreFeat = septicPredict(XfeatureTrain,XfeatureTest)
@@ -83,12 +89,19 @@ for i in range(len(w_sols)):
     YtrueMRderiveds[i], YscoreMRderiveds[i] = septicPredict(XderivedTrain,XderivedTest)
 
 for i in range(len(w_sols)):
-    print "AUC (MRscore "+ str(i+1)+ ")         = " + str(roc_auc_score(YtrueMRs[i],YscoreMRs[i]))    
-    print "AUC (MRscore+Derived "+ str(i+1)+ ") = " + str(roc_auc_score(YtrueMRderiveds[i],YscoreMRderiveds[i]))
+    if i == 0:
+        print "AUC (LRscore "+ str(i+1)+ ")         = " + str(roc_auc_score(YtrueMRs[i],YscoreMRs[i]))    
+        print "AUC (LRscore+Derived "+ str(i+1)+ ") = " + str(roc_auc_score(YtrueMRderiveds[i],YscoreMRderiveds[i]))
+    else:
+        print "AUC (MRscore "+ str(i+1)+ ")         = " + str(roc_auc_score(YtrueMRs[i],YscoreMRs[i]))    
+        print "AUC (MRscore+Derived "+ str(i+1)+ ") = " + str(roc_auc_score(YtrueMRderiveds[i],YscoreMRderiveds[i]))
 
 print "AUC (Features only)     = " + str(roc_auc_score(YtrueFeat,YscoreFeat))
 
-np.save('resultWhole',[YtrueFeat, YscoreFeat,YtrueMRs,YscoreMRs,YtrueMRderiveds, YscoreMRderiveds])
+if saveFlagMain:
+    np.save('resultWhole',[YtrueFeat, YscoreFeat,YtrueMRs,YscoreMRs,YtrueMRderiveds, YscoreMRderiveds])
+else:
+    YtrueFeat, YscoreFeat,YtrueMRs,YscoreMRs,YtrueMRderiveds, YscoreMRderiveds = np.load('resultWhole.npy')
 
 # plot ROC curve
 plt.figure()
@@ -104,3 +117,17 @@ plt.xlabel('FPR')
 plt.ylabel('TPR')
 plt.legend(['Feature','LR+derived','MR_Euclid+derived','MR_Idiv+derived'])
 plt.title('ROC')
+
+plt.figure()
+xRatio, yRatio = plotAccLift(YtrueFeat, YscoreFeat)
+plt.plot(xRatio, yRatio,'k-')
+for i in range(len(w_sols)):
+    xRatio, yRatio = plotAccLift(YtrueMRderiveds[i],YscoreMRderiveds[i])
+    plt.plot(xRatio, yRatio)
+#    xRatioMR, yRatioMR = plotAccLift(YtrueMRs[i],YscoreMRs[i])
+#    plt.plot(xRatioMR, yRatioMR,xRatio, yRatio)
+    
+plt.xlabel('% of patients included')
+plt.ylabel('Lift')
+plt.legend(['Feature','LR+derived','MR_Euclid+derived','MR_Idiv+derived'])
+plt.title('Lift Chart')

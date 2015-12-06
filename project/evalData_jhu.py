@@ -173,3 +173,20 @@ def septicPredict(dataTrain,dataTest):
         Ytrue[i] = Ytest[idxTemp[0]] # Just select first truth element of patient
     
     return Ytrue, Yscore
+    
+def plotAccLift(Ytrue, Yscore):
+    xRatio = np.arange(0,1.01,0.01)
+    yRatio = np.zeros(np.shape(xRatio))
+    nPos = np.sum(Ytrue == 1)
+    nTot = len(Ytrue)
+    
+    idx = np.argsort(-Yscore)
+    YtrueSorted = Ytrue[idx]
+    
+    for i in np.arange(1,len(xRatio)):
+        rr = xRatio[i]
+        nR = int(np.floor(rr*nTot))
+        trueTemp = YtrueSorted[:nR]
+        yRatio[i] = np.sum(trueTemp == 1)/(nPos*rr)
+        
+    return xRatio,yRatio
