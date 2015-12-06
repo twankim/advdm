@@ -43,13 +43,13 @@ def trendFeature(pScore):
         tempTs2 = ts2[:i+1]
         
         # Average score since admission
-        tFeature[i,0] = np.sum(np.multiply(tempTdiff,tempScore[0]))/tempTs[-1]
+        tFeature[i,0] = np.sum(np.multiply(tempTdiff,tempScore))/tempTs[-1]
         
         # Linear weighted score
-        tFeature[i,1] = np.sum(np.multiply(tempTs,tempScore[0]))/np.sum(tempTs)
+        tFeature[i,1] = np.sum(np.multiply(tempTs,tempScore))/np.sum(tempTs)
         
         # Quadratic weighted score
-        tFeature[i,2] = np.sum(np.multiply(tempTs2,tempScore[0]))/np.sum(tempTs2)
+        tFeature[i,2] = np.sum(np.multiply(tempTs2,tempScore))/np.sum(tempTs2)
         
         if i == 0:            
             # Average score change rate
@@ -81,8 +81,12 @@ def trendFeature(pScore):
 # Calculate score of data using given parameter and data with different mode    
 def scoreCalc(wData, w_sol, mode):
     if mode == 1:
-        scoreData = 0
+        if len(w_sol[0].params) > wData.shape[1]:
+            wData = np.concatenate((wData, np.ones((wData.shape[0],1))),axis=1)
+        scoreData = w_sol[0].predict(wData, transform = False)
     else: # inner product
+        if len(w_sol) > wData.shape[1]:
+            wData =np.concatenate((wData, np.ones((wData.shape[0],1))),axis=1)
         scoreData = np.dot(wData,w_sol)
         
     return scoreData

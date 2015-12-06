@@ -11,13 +11,18 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
 
-saveFlag = False
+saveFlag = True
+#saveFlag = False
 
-fileTrain = 'predictDataTrain.csv'
-fileTest = 'predictDataTest.csv'
-w_sol = np.load('w_sol.npy')
+fileTrain = '/Users/twankim/tdub/gitwan/advdm/project/jhu_data/predictDataTrain.csv'
+fileTest = '/Users/twankim/tdub/gitwan/advdm/project/jhu_data/predictDataTest.csv'
+#w_sol = np.load('w_sol.npy')
+#w_sol = np.load('sol_1.npy') # Linear Regression
+#w_sol = np.load('sol_4.npy') # MR_Squared Equlidian
+w_sol = np.load('sol_6.npy') # MR I-divergence
 
-mode = 0 # Selecting score function
+#mode = 0 # Selecting score function
+mode = 1 # Selecting score function
 
 if saveFlag:
     print "----- Making Training sample data..."
@@ -27,14 +32,14 @@ if saveFlag:
     # Make data from Test set
     XscoreTest, XderivedTest, XfeatureTest = makeDataShock(fileTest,w_sol,mode)
     
-    np.save('trainTdub',[XscoreTrain, XderivedTrain, XfeatureTrain])
-    np.save('testTdub',[XscoreTest, XderivedTest, XfeatureTest])
+    np.save('trainTdub6',[XscoreTrain, XderivedTrain, XfeatureTrain])
+    np.save('testTdub6',[XscoreTest, XderivedTest, XfeatureTest])
 else:
     print "----- Loading Training sample data..."
-    XscoreTrain, XderivedTrain, XfeatureTrain = np.load('trainTdub.npy')
+    XscoreTrain, XderivedTrain, XfeatureTrain = np.load('trainTdub6.npy')
     print "----- Loading Test sample data..."
     # Make data from Test set
-    XscoreTest, XderivedTest, XfeatureTest = np.load('testTdub.npy')
+    XscoreTest, XderivedTest, XfeatureTest = np.load('testTdub6.npy')
     
 
 print "----- Predicting septic shock..."
