@@ -35,7 +35,7 @@ nameNs = [1,4,6]
 if saveFlagMain:
     saveFlags = [True,True,True]
 else:
-    saveFlags = [False,True,False]
+    saveFlags = [False,False,False]
 
 print "<Feature Only>"
 if saveFlagFeat:
@@ -104,30 +104,35 @@ else:
     YtrueFeat, YscoreFeat,YtrueMRs,YscoreMRs,YtrueMRderiveds, YscoreMRderiveds = np.load('resultWhole.npy')
 
 # plot ROC curve
+derivedColors = ['r','g','b']
+scoreColors = ['deeppink','purple','darkturquoise']
 plt.figure()
 fprFeat, tprFeat,_ = roc_curve(YtrueFeat,YscoreFeat)
 plt.plot(fprFeat, tprFeat,'k-')
 for i in range(len(w_sols)):
     fprMRderived, tprMRderived,_ = roc_curve(YtrueMRderiveds[i],YscoreMRderiveds[i])
-    plt.plot(fprMRderived,tprMRderived)
-#    fprMR, tprMR,_ = roc_curve(YtrueMR,YscoreMR,pos_label=1)
-#    plt.plot(fprMR,tprMR,fprMRderived,tprMRderived)    
+    fprMR, tprMR,_ = roc_curve(YtrueMRs[i],YscoreMRs[i])
+    plt.plot(fprMRderived,tprMRderived,derivedColors[i])
+    plt.plot(fprMR,tprMR,color = scoreColors[i])    
 
 plt.xlabel('FPR')
 plt.ylabel('TPR')
-plt.legend(['Feature','LR+derived','MR_Euclid+derived','MR_Idiv+derived'])
+#plt.legend(['Feature','LR+derived','MR_Euclid+derived','MR_Idiv+derived'])
+plt.legend(['Feature','LR','LR+derived','MR_Euclid','MR_Euclid+derived','MR_Idiv','MR_Idiv+derived'])
 plt.title('ROC')
 
+# Plot Lift chart
 plt.figure()
 xRatio, yRatio = plotAccLift(YtrueFeat, YscoreFeat)
 plt.plot(xRatio, yRatio,'k-')
 for i in range(len(w_sols)):
     xRatio, yRatio = plotAccLift(YtrueMRderiveds[i],YscoreMRderiveds[i])
-    plt.plot(xRatio, yRatio)
-#    xRatioMR, yRatioMR = plotAccLift(YtrueMRs[i],YscoreMRs[i])
-#    plt.plot(xRatioMR, yRatioMR,xRatio, yRatio)
+    plt.plot(xRatio, yRatio,derivedColors[i])
+    xRatioMR, yRatioMR = plotAccLift(YtrueMRs[i],YscoreMRs[i])
+    plt.plot(xRatioMR, yRatioMR,color = scoreColors[i])
     
 plt.xlabel('% of patients included')
 plt.ylabel('Lift')
-plt.legend(['Feature','LR+derived','MR_Euclid+derived','MR_Idiv+derived'])
+#plt.legend(['Feature','LR+derived','MR_Euclid+derived','MR_Idiv+derived'])
+plt.legend(['Feature','LR','LR+derived','MR_Euclid','MR_Euclid+derived','MR_Idiv','MR_Idiv+derived'])
 plt.title('Lift Chart')
